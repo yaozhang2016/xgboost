@@ -116,6 +116,61 @@ public class DMatrix {
   }
 
   /**
+   * Create DMatrix from Sparse matrix in CSR/CSC format.
+   * 2D arrays since underlying array can accomodate that many elements.
+   * @param headers The row index of the matrix.
+   * @param indices The indices of presenting entries.
+   * @param data The data content.
+   * @param st  Type of sparsity.
+   * @param ndata   number of nonzero elements
+   * @throws XGBoostError
+   */
+  public DMatrix(long[][] headers, int[][] indices, float[][] data, SparseType st, int shapeParam2,
+                 long ndata) throws XGBoostError {
+    long[] out = new long[1];
+    if (st == SparseType.CSR) {
+      XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DCSREx(headers, indices, data,
+              0, shapeParam2, ndata, out));
+    } else if (st == SparseType.CSC) {
+      XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DCSCEx(headers, indices, data,
+              0, shapeParam2, ndata, out));
+    } else {
+      throw new UnknownError("unknow sparsetype");
+    }
+    handle = out[0];
+  }
+
+  /**
+   * Create DMatrix from Sparse matrix in CSR/CSC format.
+   * 2D arrays since underlying array can accomodate that many elements.
+   * @param headers The row index of the matrix.
+   * @param indices The indices of presenting entries.
+   * @param data The data content.
+   * @param st  Type of sparsity.
+   * @param shapeParam   when st is CSR, it specifies the column number, otherwise it is taken as
+   *                     row number
+   * @param shapeParam2  when st is CSR, it specifies the row number, otherwise it is taken as
+   *                     column number
+   * @param ndata   number of nonzero elements
+   * @throws XGBoostError
+   */
+  public DMatrix(long[][] headers, int[][] indices, float[][] data, SparseType st,
+                 int shapeParam, int shapeParam2, long ndata)
+          throws XGBoostError {
+    long[] out = new long[1];
+    if (st == SparseType.CSR) {
+      XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DCSREx(headers, indices, data,
+              shapeParam, shapeParam2, ndata, out));
+    } else if (st == SparseType.CSC) {
+      XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DCSCEx(headers, indices, data,
+              shapeParam, shapeParam2, ndata, out));
+    } else {
+      throw new UnknownError("unknow sparsetype");
+    }
+    handle = out[0];
+  }
+
+  /**
    * create DMatrix from dense matrix
    *
    * @param data data values
@@ -152,7 +207,7 @@ public class DMatrix {
    */
   public DMatrix(float[][] data, int nrow, int ncol) throws XGBoostError {
     long[] out = new long[1];
-    JNIErrorHandle.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DMat(data, nrow, ncol, 0.0f, out));
+    XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DMat(data, nrow, ncol, 0.0f, out));
     handle = out[0];
   }
 
@@ -165,7 +220,7 @@ public class DMatrix {
    */
   public DMatrix(float[][] data, int nrow, int ncol, float missing) throws XGBoostError {
     long[] out = new long[1];
-    JNIErrorHandle.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DMat(data, nrow, ncol, missing, out));
+    XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixCreateFrom2DMat(data, nrow, ncol, missing, out));
     handle = out[0];
   }
 
