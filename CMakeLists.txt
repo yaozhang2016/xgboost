@@ -100,7 +100,7 @@ if(USE_CUDA)
   cuda_add_library(gpuxgboost ${CUDA_SOURCES} STATIC)
   target_link_libraries(gpuxgboost)
   list(APPEND LINK_LIBRARIES gpuxgboost) 
-  target_link_libraries(gpuxgboost nccl)
+#  target_link_libraries(gpuxgboost nccl)
 endif()
 
 add_library(objxgboost OBJECT ${SOURCES})

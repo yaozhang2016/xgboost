@@ -17,7 +17,6 @@ namespace tree {
 DMLC_REGISTRY_FILE_TAG(updater_gpu_hist);
 
 typedef bst_gpair_integer gpair_sum_t;
-static const ncclDataType_t nccl_sum_t = ncclInt64;
 
 // Helper for explicit template specialisation
 template <int N>
@@ -281,20 +280,6 @@ class GPUHistMaker : public TreeUpdater {
         p_last_fmat_(nullptr),
         prediction_cache_initialised(false) {}
   ~GPUHistMaker() {
-    if (initialised) {
-      for (int d_idx = 0; d_idx < n_devices; ++d_idx) {
-        ncclCommDestroy(comms[d_idx]);
-
-        dh::safe_cuda(cudaSetDevice(dList[d_idx]));
-        dh::safe_cuda(cudaStreamDestroy(*(streams[d_idx])));
-      }
-      for (int num_d = 1; num_d <= n_devices;
-           ++num_d) {  // loop over number of devices used
-        for (int d_idx = 0; d_idx < n_devices; ++d_idx) {
-          ncclCommDestroy(find_split_comms[num_d - 1][d_idx]);
-        }
-      }
-    }
   }
   void Init(
       const std::vector<std::pair<std::string, std::string>>& args) override {
@@ -344,56 +329,6 @@ class GPUHistMaker : public TreeUpdater {
       for (int d_idx = 0; d_idx < n_devices; ++d_idx) {
         int device_idx = (param.gpu_id + d_idx) % dh::n_visible_devices();
         dList[d_idx] = device_idx;
-      }
-
-      // initialize nccl
-
-      comms.resize(n_devices);
-      streams.resize(n_devices);
-      dh::safe_nccl(ncclCommInitAll(comms.data(), n_devices,
-                                    dList.data()));  // initialize communicator
-                                                     // (One communicator per
-                                                     // process)
-
-      // printf("# NCCL: Using devices\n");
-      for (int d_idx = 0; d_idx < n_devices; ++d_idx) {
-        streams[d_idx] =
-            reinterpret_cast<cudaStream_t*>(malloc(sizeof(cudaStream_t)));
-        dh::safe_cuda(cudaSetDevice(dList[d_idx]));
-        dh::safe_cuda(cudaStreamCreate(streams[d_idx]));
-
-        int cudaDev;
-        int rank;
-        cudaDeviceProp prop;
-        dh::safe_nccl(ncclCommCuDevice(comms[d_idx], &cudaDev));
-        dh::safe_nccl(ncclCommUserRank(comms[d_idx], &rank));
-        dh::safe_cuda(cudaGetDeviceProperties(&prop, cudaDev));
-        // printf("#   Rank %2d uses device %2d [0x%02x] %s\n", rank, cudaDev,
-        //             prop.pciBusID, prop.name);
-        // cudaDriverGetVersion(&driverVersion);
-        // cudaRuntimeGetVersion(&runtimeVersion);
-        std::ostringstream oss;
-        oss << "CUDA Capability Major/Minor version number: " << prop.major
-            << "." << prop.minor << " is insufficient.  Need >=3.5.";
-        int failed = prop.major < 3 || prop.major == 3 && prop.minor < 5;
-        CHECK(failed == 0) << oss.str();
-      }
-
-      // local find_split group of comms for each case of reduced number of
-      // GPUs to use
-      find_split_comms.resize(
-          n_devices,
-          std::vector<ncclComm_t>(n_devices));  // TODO(JCM): Excessive, but
-                                                // ok, and best to do
-                                                // here instead of
-                                                // repeatedly
-      for (int num_d = 1; num_d <= n_devices;
-           ++num_d) {  // loop over number of devices used
-        dh::safe_nccl(
-            ncclCommInitAll(find_split_comms[num_d - 1].data(), num_d,
-                            dList.data()));  // initialize communicator
-                                             // (One communicator per
-                                             // process)
       }
 
       is_dense = info->num_nonzero == info->num_col * info->num_row;
@@ -642,29 +577,6 @@ class GPUHistMaker : public TreeUpdater {
 
     //  time.printElapsed("Add Time");
 
-    // (in-place) reduce each element of histogram (for only current level)
-    // across multiple gpus
-    // TODO(JCM): use out of place with pre-allocated buffer, but then have to
-    // copy
-    // back on device
-    //  fprintf(stderr,"sizeof(bst_gpair)/sizeof(float)=%d\n",sizeof(bst_gpair)/sizeof(float));
-    for (int d_idx = 0; d_idx < n_devices; d_idx++) {
-      int device_idx = dList[d_idx];
-      dh::safe_cuda(cudaSetDevice(device_idx));
-      dh::safe_nccl(ncclAllReduce(
-          reinterpret_cast<const void*>(hist_vec[d_idx].GetLevelPtr(depth)),
-          reinterpret_cast<void*>(hist_vec[d_idx].GetLevelPtr(depth)),
-          hist_vec[d_idx].LevelSize(depth) * sizeof(gpair_sum_t) /
-              sizeof(gpair_sum_t::value_t),
-          nccl_sum_t, ncclSum, comms[d_idx], *(streams[d_idx])));
-    }
-
-    for (int d_idx = 0; d_idx < n_devices; d_idx++) {
-      int device_idx = dList[d_idx];
-      dh::safe_cuda(cudaSetDevice(device_idx));
-      dh::safe_cuda(cudaStreamSynchronize(*(streams[d_idx])));
-    }
-    // if no NCCL, then presume only 1 GPU, then already correct
 
     //  time.printElapsed("Reduce-Add Time");
 
@@ -1063,10 +975,6 @@ class GPUHistMaker : public TreeUpdater {
   std::vector<dh::dvec<bst_gpair>> device_gpair;
   std::vector<dh::dvec<int>> gidx_feature_map;
   std::vector<dh::dvec<float>> gidx_fvalue_map;
-
-  std::vector<cudaStream_t*> streams;
-  std::vector<ncclComm_t> comms;
-  std::vector<std::vector<ncclComm_t>> find_split_comms;
 
   double cpu_init_time;
   double gpu_init_time;

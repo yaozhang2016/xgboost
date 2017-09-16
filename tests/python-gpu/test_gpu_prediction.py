@@ -23,6 +23,7 @@ class TestGPUPredict(unittest.TestCase):
                     "objective": "binary:logistic",
                     "predictor": "gpu_predictor",
                     'eval_metric': 'auc',
+                    'debug_verbose': 5
                 }
                 bst = xgb.train(param, dm, iterations, evals=watchlist, evals_result=res)
                 assert self.non_decreasing(res["train"]["auc"])

@@ -37,6 +37,7 @@ setup(name='xgboost',
       # this is the golden line
       include_package_data=True,
       data_files=[('xgboost', LIB_PATH)],
+      package_data={'xgboost': ['*']},
       license='Apache-2.0',
       classifiers=['License :: OSI Approved :: Apache Software License'],
       url='https://github.com/dmlc/xgboost')

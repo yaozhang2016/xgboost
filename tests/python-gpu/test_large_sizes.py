@@ -70,7 +70,7 @@ class TestGPU(unittest.TestCase):
                          'eta': 1,
                          'silent': 0,
                          'debug_verbose': 5,
-                         'n_gpus': 1,
+                         'n_gpus': -1,
                          'objective': 'binary:logistic',
                          'max_bin': max_bin,
                          'eval_metric': 'auc'}
