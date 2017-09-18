@@ -16,6 +16,8 @@ libpath_py = os.path.join(CURRENT_DIR, 'xgboost/libpath.py')
 libpath = {'__file__': libpath_py}
 exec(compile(open(libpath_py, "rb").read(), libpath_py, 'exec'), libpath, libpath)
 
+os.system("ln -sf ../lib/libxgboost.so xgboost")
+
 LIB_PATH = [os.path.relpath(libfile, CURRENT_DIR) for libfile in libpath['find_lib_path']()]
 print("Install libxgboost from: %s" % LIB_PATH)
 # Please use setup_pip.py for generating and deploying pip installation
