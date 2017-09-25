@@ -36,19 +36,19 @@ def run_benchmark(args, gpu_algorithm, cpu_algorithm):
     xgb.train(param, dtrain, args.iterations, evals=[(dtest, "test")])
     print ("Train Time: %s seconds" % (str(time.time() - tmp)))
 
-    param['silent'] = 1
-    param['tree_method'] = cpu_algorithm
-    print("Training with '%s'" % param['tree_method'])
-    tmp = time.time()
-    xgb.train(param, dtrain, args.iterations, evals=[(dtest, "test")])
-    print ("Time: %s seconds" % (str(time.time() - tmp)))
+    #param['silent'] = 1
+    #param['tree_method'] = cpu_algorithm
+    #print("Training with '%s'" % param['tree_method'])
+    #tmp = time.time()
+    #xgb.train(param, dtrain, args.iterations, evals=[(dtest, "test")])
+    #3print ("Time: %s seconds" % (str(time.time() - tmp)))
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--algorithm', choices=['all', 'gpu_exact', 'gpu_hist'], default='all')
+parser.add_argument('--algorithm', choices=['all', 'gpu_exact', 'gpu_hist'], default='gpu_hist')
 parser.add_argument('--rows', type=int, default=1000000)
 parser.add_argument('--columns', type=int, default=50)
-parser.add_argument('--iterations', type=int, default=500)
+parser.add_argument('--iterations', type=int, default=200)
 parser.add_argument('--test_size', type=float, default=0.25)
 args = parser.parse_args()
 

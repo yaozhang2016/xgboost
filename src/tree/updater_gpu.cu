@@ -49,7 +49,7 @@ static const int NONE_KEY = -100;
  * @param tmpKeys keys buffer
  * @param size number of elements that will be scanned
  */
-template <int BLKDIM_L1L3 = 256>
+template <int BLKDIM_L1L3 = 128>
 int scanTempBufferSize(int size) {
   int nBlks = dh::div_round_up(size, BLKDIM_L1L3);
   return nBlks;
@@ -200,7 +200,7 @@ __global__ void cubScanByKeyL3(bst_gpair* sums, bst_gpair* scans,
  * @param colIds column indices for each element in the array
  * @param nodeStart index of the leftmost node in the current level
  */
-template <int BLKDIM_L1L3 = 256, int BLKDIM_L2 = 512>
+template <int BLKDIM_L1L3 = 128, int BLKDIM_L2 = 512>
 void reduceScanByKey(bst_gpair* sums, bst_gpair* scans, const bst_gpair* vals,
                      const int* instIds, const node_id_t* keys, int size,
                      int nUniqKeys, int nCols, bst_gpair* tmpScans,
@@ -368,7 +368,7 @@ __global__ void atomicArgMaxByKeySmem(
  * @param param training parameters
  * @param algo which algorithm to use for argmax_by_key
  */
-template <int BLKDIM = 256, int ITEMS_PER_THREAD = 4>
+template <int BLKDIM = 128, int ITEMS_PER_THREAD = 4>
 void argMaxByKey(ExactSplitCandidate* nodeSplits, const bst_gpair* gradScans,
                  const bst_gpair* gradSums, const float* vals,
                  const int* colIds, const node_id_t* nodeAssigns,
@@ -708,7 +708,7 @@ class GPUMaker : public TreeUpdater {
         d_nodes[0] = DeviceDenseNode(d_sums[0], 0, gpu_params);
       });
     } else {
-      const int BlkDim = 256;
+      const int BlkDim = 128;
       const int ItemsPerThread = 4;
       // assign default node ids first
       int nBlks = dh::div_round_up(nRows, BlkDim);

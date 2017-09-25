@@ -598,7 +598,7 @@ __global__ void launch_n_kernel(int device_idx, size_t begin, size_t end,
   }
 }
 
-template <int ITEMS_PER_THREAD = 8, int BLOCK_THREADS = 256, typename L>
+template <int ITEMS_PER_THREAD = 8, int BLOCK_THREADS = 128, typename L>
 inline void launch_n(int device_idx, size_t n, L lambda) {
   safe_cuda(cudaSetDevice(device_idx));
   // TODO: Template on n so GRID_SIZE always fits into int.
@@ -610,7 +610,7 @@ inline void launch_n(int device_idx, size_t n, L lambda) {
 }
 
 // if n_devices=-1, then use all visible devices
-template <int ITEMS_PER_THREAD = 8, int BLOCK_THREADS = 256, typename L>
+template <int ITEMS_PER_THREAD = 8, int BLOCK_THREADS = 128, typename L>
 inline void multi_launch_n(size_t n, int n_devices, L lambda) {
   n_devices = n_devices < 0 ? n_visible_devices() : n_devices;
   CHECK_LE(n_devices, n_visible_devices()) << "Number of devices requested "
@@ -725,7 +725,7 @@ void SparseTransformLbs(int device_idx, dh::CubMemory *temp_memory,
                         offset_t num_segments, func_t f) {
   typedef typename cub::CubVector<offset_t, 2>::Type coordinate_t;
   dh::safe_cuda(cudaSetDevice(device_idx));
-  const int BLOCK_THREADS = 256;
+  const int BLOCK_THREADS = 128;
   const int ITEMS_PER_THREAD = 1;
   const int TILE_SIZE = BLOCK_THREADS * ITEMS_PER_THREAD;
   int num_tiles = dh::div_round_up(count + num_segments, BLOCK_THREADS);
@@ -837,7 +837,7 @@ void sumReduction(dh::CubMemory &tmp_mem, dh::dvec<T> &in, dh::dvec<T> &out,
  * @param len number of elements i the buffer
  * @param def default value to be filled
  */
-template <typename T, int BlkDim = 256, int ItemsPerThread = 4>
+template <typename T, int BlkDim = 128, int ItemsPerThread = 4>
 void fillConst(int device_idx, T *out, int len, T def) {
   dh::launch_n<ItemsPerThread, BlkDim>(device_idx, len,
                                        [=] __device__(int i) { out[i] = def; });
@@ -852,7 +852,7 @@ void fillConst(int device_idx, T *out, int len, T def) {
  * @param instId gather indices
  * @param nVals length of the buffers
  */
-template <typename T1, typename T2, int BlkDim = 256, int ItemsPerThread = 4>
+template <typename T1, typename T2, int BlkDim = 128, int ItemsPerThread = 4>
 void gather(int device_idx, T1 *out1, const T1 *in1, T2 *out2, const T2 *in2,
             const int *instId, int nVals) {
   dh::launch_n<ItemsPerThread, BlkDim>(device_idx, nVals,
@@ -872,7 +872,7 @@ void gather(int device_idx, T1 *out1, const T1 *in1, T2 *out2, const T2 *in2,
  * @param instId gather indices
  * @param nVals length of the buffers
  */
-template <typename T, int BlkDim = 256, int ItemsPerThread = 4>
+template <typename T, int BlkDim = 128, int ItemsPerThread = 4>
 void gather(int device_idx, T *out, const T *in, const int *instId, int nVals) {
   dh::launch_n<ItemsPerThread, BlkDim>(device_idx, nVals,
                                        [=] __device__(int i) {
