@@ -522,7 +522,7 @@ class XGBClassifier(XGBModel, XGBClassifierBase):
 
     def predict(self, data, output_margin=False, ntree_limit=0):
         test_dmatrix = DMatrix(data, missing=self.missing, nthread=self.n_jobs)
-        params = get_xgb_params()
+        params = self.get_xgb_params()
         self._Booster = Booster(params)
         class_probs = self.get_booster().predict(test_dmatrix,
                                                  output_margin=output_margin,
