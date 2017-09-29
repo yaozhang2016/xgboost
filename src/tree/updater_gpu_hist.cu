@@ -11,7 +11,7 @@
 #include "param.h"
 #include "updater_gpu_common.cuh"
 
-#define USE_NCCL 1
+#define USE_NCCL 0
 
 namespace xgboost {
 namespace tree {

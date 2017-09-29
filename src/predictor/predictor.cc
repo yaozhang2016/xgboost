@@ -29,6 +29,7 @@ bool Predictor::PredictFromCache(DMatrix* dmat,
       if (y.size() != 0) {
         out_preds->resize(y.size());
         std::copy(y.begin(), y.end(), out_preds->begin());
+        fprintf(stderr,"Here in cache\n"); fflush(stderr);
         return true;
       }
     }

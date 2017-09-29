@@ -18,6 +18,7 @@
 #include "./common/common.h"
 #include "./common/io.h"
 #include "./common/random.h"
+#include <stdio.h>
 
 namespace xgboost {
 // implementation of base learner.
@@ -141,6 +142,7 @@ class LearnerImpl : public Learner {
   explicit LearnerImpl(const std::vector<std::shared_ptr<DMatrix> >& cache)
       : cache_(cache) {
     // boosted tree
+    fprintf(stderr,"LearnerImpl0\n"); fflush(stderr);
     name_obj_ = "reg:linear";
     name_gbm_ = "gbtree";
   }
@@ -179,11 +181,14 @@ class LearnerImpl : public Learner {
         cfg_["predictor"] = "gpu_predictor";
       }
     }
+    fprintf(stderr,"config: %d method=%d split=%d\n",cfg_.count("predictor"),tparam.tree_method,tparam.dsplit); fflush(stderr);
   }
+  
 
   void Configure(
       const std::vector<std::pair<std::string, std::string> >& args) override {
     // add to configurations
+    fprintf(stderr,"Configure\n"); fflush(stderr);
     tparam.InitAllowUnknown(args);
     cfg_.clear();
     for (const auto& kv : args) {
@@ -251,9 +256,11 @@ class LearnerImpl : public Learner {
     }
   }
 
-  void InitModel() override { this->LazyInitModel(); }
+  void InitModel() override {    fprintf(stderr,"InitModel\n"); fflush(stderr);
+ this->LazyInitModel(); }
 
   void Load(dmlc::Stream* fi) override {
+    fprintf(stderr,"Load\n"); fflush(stderr);
     // TODO(tqchen) mark deprecation of old format.
     common::PeekableInStream fp(fi);
     // backward compatible header check.
@@ -318,6 +325,7 @@ class LearnerImpl : public Learner {
 
   // rabit save model to rabit checkpoint
   void Save(dmlc::Stream* fo) const override {
+    fprintf(stderr,"Save\n"); fflush(stderr);
     fo->Write(&mparam, sizeof(LearnerModelParam));
     fo->Write(name_obj_);
     fo->Write(name_gbm_);
@@ -426,6 +434,7 @@ class LearnerImpl : public Learner {
   void Predict(DMatrix* data, bool output_margin,
                std::vector<bst_float>* out_preds, unsigned ntree_limit,
                bool pred_leaf, bool pred_contribs) const override {
+    fprintf(stderr,"Predict\n"); fflush(stderr);
     if (pred_contribs) {
       gbm_->PredictContribution(data, out_preds, ntree_limit);
     } else if (pred_leaf) {
@@ -555,6 +564,7 @@ class LearnerImpl : public Learner {
 
 Learner* Learner::Create(
     const std::vector<std::shared_ptr<DMatrix> >& cache_data) {
+  fprintf(stderr,"Create Learner\n"); fflush(stderr);
   return new LearnerImpl(cache_data);
 }
 }  // namespace xgboost

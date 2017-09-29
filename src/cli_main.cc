@@ -21,7 +21,7 @@
 #include <vector>
 #include "./common/sync.h"
 #include "./common/config.h"
-
+#include <stdio.h>
 
 namespace xgboost {
 
@@ -127,6 +127,8 @@ struct CLIParam : public dmlc::Parameter<CLIParam> {
   }
   // customized configure function of CLIParam
   inline void Configure(const std::vector<std::pair<std::string, std::string> >& cfg) {
+    fprintf(stderr,"main configure\n"); fflush(stderr);
+
     this->cfg = cfg;
     this->InitAllowUnknown(cfg);
     for (const auto& kv : cfg) {
@@ -155,6 +157,7 @@ struct CLIParam : public dmlc::Parameter<CLIParam> {
 DMLC_REGISTER_PARAMETER(CLIParam);
 
 void CLITrain(const CLIParam& param) {
+  fprintf(stderr,"CLITrain\n"); fflush(stderr);
   const double tstart_data_load = dmlc::GetTime();
   if (rabit::IsDistributed()) {
     std::string pname = rabit::GetProcessorName();
@@ -268,6 +271,7 @@ void CLITrain(const CLIParam& param) {
 }
 
 void CLIDumpModel(const CLIParam& param) {
+  fprintf(stderr,"CLIDumpModel\n"); fflush(stderr);
   FeatureMap fmap;
   if (param.name_fmap != "NULL") {
     std::unique_ptr<dmlc::Stream> fs(
@@ -340,6 +344,7 @@ void CLIPredict(const CLIParam& param) {
 }
 
 int CLIRunTask(int argc, char *argv[]) {
+  fprintf(stderr,"CLIRunTask\n"); fflush(stderr);
   if (argc < 2) {
     printf("Usage: <config>\n");
     return 0;
@@ -374,5 +379,6 @@ int CLIRunTask(int argc, char *argv[]) {
 }  // namespace xgboost
 
 int main(int argc, char *argv[]) {
+  fprintf(stderr,"main\n"); fflush(stderr);
   return xgboost::CLIRunTask(argc, argv);
 }

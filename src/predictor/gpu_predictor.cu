@@ -9,6 +9,7 @@
 #include <xgboost/tree_updater.h>
 #include <memory>
 #include "../common/device_helpers.cuh"
+#include <stdio.h>
 
 namespace xgboost {
 namespace predictor {
@@ -52,6 +53,7 @@ struct DeviceMatrix {
   thrust::device_vector<float> predictions;
 
   DeviceMatrix(DMatrix* dmat, int device_idx, bool silent) : p_mat(dmat) {
+    fprintf(stderr,"HERE in DeviceMatrix\n"); fflush(stderr);
     dh::safe_cuda(cudaSetDevice(device_idx));
     auto info = dmat->info();
     ba.allocate(device_idx, silent, &row_ptr, info.num_row + 1, &data,

@@ -17,6 +17,7 @@
 #include "../common/math.h"
 #include "../common/io.h"
 #include "../common/group_data.h"
+#include <stdio.h>
 
 namespace xgboost {
 // booster wrapper for backward compatible reason.
@@ -25,13 +26,15 @@ class Booster {
   explicit Booster(const std::vector<std::shared_ptr<DMatrix> >& cache_mats)
       : configured_(false),
         initialized_(false),
-        learner_(Learner::Create(cache_mats)) {}
+        learner_(Learner::Create(cache_mats)) {fprintf(stderr,"Booster\n"); fflush(stderr);}
 
   inline Learner* learner() {
+    fprintf(stderr,"Booster learner get\n"); fflush(stderr);
     return learner_.get();
   }
 
   inline void SetParam(const std::string& name, const std::string& val) {
+    fprintf(stderr,"Booster setparam\n"); fflush(stderr);
     auto it = std::find_if(cfg_.begin(), cfg_.end(),
       [&name, &val](decltype(*cfg_.begin()) &x) {
         if (name == "eval_metric") {
@@ -50,6 +53,7 @@ class Booster {
   }
 
   inline void LazyInit() {
+    fprintf(stderr,"LazyInit configured_=%d initialized=%d\n",configured_,initialized_); fflush(stderr);
     if (!configured_) {
       learner_->Configure(cfg_);
       configured_ = true;
@@ -58,11 +62,14 @@ class Booster {
       learner_->InitModel();
       initialized_ = true;
     }
+    fprintf(stderr,"AFTER: configured_=%d initialized=%d\n",configured_,initialized_); fflush(stderr);
   }
 
   inline void LoadModel(dmlc::Stream* fi) {
+    fprintf(stderr,"loadmodel0 configured_=%d initialized=%d\n",configured_,initialized_); fflush(stderr);
     learner_->Load(fi);
     initialized_ = true;
+    fprintf(stderr,"loadmodel1 configured_=%d initialized=%d\n",configured_,initialized_); fflush(stderr);
   }
 
  public:
@@ -83,14 +90,17 @@ class NativeDataIter : public dmlc::Parser<uint32_t> {
                  XGBCallbackDataIterNext* next_callback)
       :  at_first_(true), bytes_read_(0),
          data_handle_(data_handle), next_callback_(next_callback) {
+    fprintf(stderr,"Native\n"); fflush(stderr);
   }
 
   // override functions
   void BeforeFirst() override {
     CHECK(at_first_) << "cannot reset NativeDataIter";
+    fprintf(stderr,"Before first\n"); fflush(stderr);
   }
 
   bool Next() override {
+    fprintf(stderr,"Next\n"); fflush(stderr);
     if ((*next_callback_)(
             data_handle_,
             XGBoostNativeDataIterSetData,
@@ -107,11 +117,13 @@ class NativeDataIter : public dmlc::Parser<uint32_t> {
   }
 
   size_t BytesRead() const override {
-    return bytes_read_;
+    fprintf(stderr,"BytesRead\n"); fflush(stderr);
+ return bytes_read_;
   }
 
   // callback to set the data
   void SetData(const XGBoostBatchCSR& batch) {
+    fprintf(stderr,"SetData\n"); fflush(stderr);
     offset_.clear();
     label_.clear();
     weight_.clear();
@@ -175,6 +187,7 @@ class NativeDataIter : public dmlc::Parser<uint32_t> {
 int XGBoostNativeDataIterSetData(
     void *handle, XGBoostBatchCSR batch) {
   API_BEGIN();
+  fprintf(stderr,"NativeDataItersetData\n"); fflush(stderr);
   static_cast<xgboost::NativeDataIter*>(handle)->SetData(batch);
   API_END();
 }
@@ -814,15 +827,21 @@ inline void XGBoostDumpModelImpl(
     const char*** out_models) {
   std::vector<std::string>& str_vecs = XGBAPIThreadLocalStore::Get()->ret_vec_str;
   std::vector<const char*>& charp_vecs = XGBAPIThreadLocalStore::Get()->ret_vec_charp;
+  fprintf(stderr,"DOG1\n"); fflush(stderr);
   Booster *bst = static_cast<Booster*>(handle);
+  fprintf(stderr,"DOG2: %p\n",bst); fflush(stderr);
   bst->LazyInit();
+  fprintf(stderr,"DOG3\n"); fflush(stderr);
   str_vecs = bst->learner()->DumpModel(fmap, with_stats != 0, format);
+  fprintf(stderr,"DOG4\n"); fflush(stderr);
   charp_vecs.resize(str_vecs.size());
   for (size_t i = 0; i < str_vecs.size(); ++i) {
     charp_vecs[i] = str_vecs[i].c_str();
   }
+  fprintf(stderr,"DOG5\n"); fflush(stderr);
   *out_models = dmlc::BeginPtr(charp_vecs);
   *len = static_cast<xgboost::bst_ulong>(charp_vecs.size());
+  fprintf(stderr,"DOG6\n"); fflush(stderr);
 }
 XGB_DLL int XGBoosterDumpModel(BoosterHandle handle,
                        const char* fmap,
@@ -930,6 +949,7 @@ XGB_DLL int XGBoosterLoadRabitCheckpoint(BoosterHandle handle,
   *version = rabit::LoadCheckPoint(bst->learner());
   if (*version != 0) {
     bst->initialized_ = true;
+    fprintf(stderr,"checkpoint onfigured_=%d initialized=%d\n",bst->configured_,bst->initialized_); fflush(stderr);
   }
   API_END();
 }
