@@ -148,6 +148,8 @@ class LearnerImpl : public Learner {
   }
 
   void ConfigureUpdaters() {
+    fprintf(stderr,"config0: method=%d split=%d\n",tparam.tree_method,tparam.dsplit); fflush(stderr);
+
     if (tparam.tree_method == 0 || tparam.tree_method == 1 ||
         tparam.tree_method == 2) {
       if (cfg_.count("updater") == 0) {
@@ -176,12 +178,15 @@ class LearnerImpl : public Learner {
     } else if (tparam.tree_method == 5) {
       if (cfg_.count("updater") == 0) {
         cfg_["updater"] = "grow_gpu_hist";
+        std::cout << cfg_["updater"] << std::endl;
       }
       if (cfg_.count("predictor") == 0) {
         cfg_["predictor"] = "gpu_predictor";
+        std::cout << cfg_["predictor"] << std::endl;
       }
+      //      cfg_["predictor"] = "gpu_predictor";
     }
-    fprintf(stderr,"config: %d method=%d split=%d\n",cfg_.count("predictor"),tparam.tree_method,tparam.dsplit); fflush(stderr);
+    fprintf(stderr,"config: %d %d method=%d split=%d\n",cfg_.count("updater"),cfg_.count("predictor"),tparam.tree_method,tparam.dsplit); fflush(stderr);
   }
   
 

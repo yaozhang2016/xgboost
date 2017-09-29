@@ -18,6 +18,7 @@ class CPUPredictor : public Predictor {
                              const std::vector<int>& tree_info, int bst_group,
                              unsigned root_index, RegTree::FVec* p_feats,
                              unsigned tree_begin, unsigned tree_end) {
+    fprintf(stderr,"CPU1\n"); fflush(stderr);
     bst_float psum = 0.0f;
     p_feats->Fill(inst);
     for (size_t i = tree_begin; i < tree_end; ++i) {
@@ -32,6 +33,7 @@ class CPUPredictor : public Predictor {
 
   // init thread buffers
   inline void InitThreadTemp(int nthread, int num_feature) {
+    fprintf(stderr,"CPU2\n"); fflush(stderr);
     int prev_thread_temp_size = thread_temp.size();
     if (prev_thread_temp_size < nthread) {
       thread_temp.resize(nthread, RegTree::FVec());
@@ -44,6 +46,7 @@ class CPUPredictor : public Predictor {
                                 std::vector<bst_float>* out_preds,
                                 const gbm::GBTreeModel& model, int num_group,
                                 unsigned tree_begin, unsigned tree_end) {
+    fprintf(stderr,"CPU3\n"); fflush(stderr);
     const MetaInfo& info = p_fmat->info();
     const int nthread = omp_get_max_threads();
     InitThreadTemp(nthread, model.param.num_feature);
@@ -98,6 +101,7 @@ class CPUPredictor : public Predictor {
   void PredLoopInternal(DMatrix* dmat, std::vector<bst_float>* out_preds,
                         const gbm::GBTreeModel& model, int tree_begin,
                         unsigned ntree_limit) {
+    fprintf(stderr,"CPU4\n"); fflush(stderr);
     // TODO(Rory): Check if this specialisation actually improves performance
     if (model.param.num_output_group == 1) {
       PredLoopSpecalize(dmat, out_preds, model, 1, tree_begin, ntree_limit);
@@ -111,6 +115,7 @@ class CPUPredictor : public Predictor {
   void PredictBatch(DMatrix* dmat, std::vector<bst_float>* out_preds,
                     const gbm::GBTreeModel& model, int tree_begin,
                     unsigned ntree_limit = 0) override {
+    fprintf(stderr,"CPU5\n"); fflush(stderr);
     if (this->PredictFromCache(dmat, out_preds, model, ntree_limit)) {
       return;
     }
@@ -129,6 +134,7 @@ class CPUPredictor : public Predictor {
       const gbm::GBTreeModel& model,
       std::vector<std::unique_ptr<TreeUpdater>>* updaters,
       int num_new_trees) override {
+    fprintf(stderr,"CPU6\n"); fflush(stderr);
     int old_ntree = model.trees.size() - num_new_trees;
     // update cache entry
     for (auto& kv : cache_) {
@@ -154,6 +160,7 @@ class CPUPredictor : public Predictor {
                        std::vector<bst_float>* out_preds,
                        const gbm::GBTreeModel& model, unsigned ntree_limit,
                        unsigned root_index) override {
+    fprintf(stderr,"CPU7\n"); fflush(stderr);
     if (thread_temp.size() == 0) {
       thread_temp.resize(1, RegTree::FVec());
       thread_temp[0].Init(model.param.num_feature);
@@ -174,6 +181,7 @@ class CPUPredictor : public Predictor {
   }
   void PredictLeaf(DMatrix* p_fmat, std::vector<bst_float>* out_preds,
                    const gbm::GBTreeModel& model, unsigned ntree_limit) override {
+    fprintf(stderr,"CPU8\n"); fflush(stderr);
     const int nthread = omp_get_max_threads();
     InitThreadTemp(nthread, model.param.num_feature);
     const MetaInfo& info = p_fmat->info();
@@ -209,6 +217,7 @@ class CPUPredictor : public Predictor {
   void PredictContribution(DMatrix* p_fmat,
                            std::vector<bst_float>* out_contribs,
                            const gbm::GBTreeModel& model, unsigned ntree_limit) override {
+    fprintf(stderr,"CPU9\n"); fflush(stderr);
     const int nthread = omp_get_max_threads();
     InitThreadTemp(nthread,  model.param.num_feature);
     const MetaInfo& info = p_fmat->info();

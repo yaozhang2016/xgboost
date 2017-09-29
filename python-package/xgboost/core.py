@@ -737,6 +737,7 @@ class Booster(object):
     def __getstate__(self):
         # can't pickle ctypes pointers
         # put model content in bytearray
+        import sys ; print("getstate"); sys.stdout.flush()
         this = self.__dict__.copy()
         handle = this['handle']
         if handle is not None:
@@ -746,6 +747,7 @@ class Booster(object):
 
     def __setstate__(self, state):
         # reconstruct handle from raw data
+        import sys ; print("setstate"); sys.stdout.flush()
         handle = state['handle']
         if handle is not None:
             buf = handle
@@ -760,9 +762,11 @@ class Booster(object):
         self.set_param({'seed': 0})
 
     def __copy__(self):
+        import sys ; print("copy"); sys.stdout.flush()
         return self.__deepcopy__(None)
 
     def __deepcopy__(self, _):
+        import sys ; print("deepcopy"); sys.stdout.flush()
         return Booster(model_file=self.save_raw())
 
     def copy(self):
@@ -848,6 +852,7 @@ class Booster(object):
                 self.handle, c_str(key), value))
 
     def set_param(self, params, value=None):
+        import sys ; print("set_param"); sys.stdout.flush()
         """Set parameters into the Booster.
 
         Parameters
@@ -865,6 +870,7 @@ class Booster(object):
             _check_call(_LIB.XGBoosterSetParam(self.handle, c_str(key), c_str(str(val))))
 
     def update(self, dtrain, iteration, fobj=None):
+        import sys ; print("update"); sys.stdout.flush()
         """
         Update for one iteration, with objective function calculated internally.
 
@@ -890,6 +896,7 @@ class Booster(object):
             self.boost(dtrain, grad, hess)
 
     def boost(self, dtrain, grad, hess):
+        import sys ; print("boost"); sys.stdout.flush()
         """
         Boost the booster for one iteration, with customized gradient statistics.
 
@@ -981,6 +988,7 @@ class Booster(object):
 
     def predict(self, data, output_margin=False, ntree_limit=0, pred_leaf=False,
                 pred_contribs=False):
+        import sys ; print("predict"); sys.stdout.flush()
         """
         Predict with data.
 
@@ -1043,6 +1051,7 @@ class Booster(object):
         return preds
 
     def save_model(self, fname):
+        import sys ; print("save_model"); sys.stdout.flush()
         """
         Save the model to a file.
 
@@ -1057,6 +1066,7 @@ class Booster(object):
             raise TypeError("fname must be a string")
 
     def save_raw(self):
+        import sys ; print("save_raw"); sys.stdout.flush()
         """
         Save the model to a in memory buffer representation
 
@@ -1072,6 +1082,7 @@ class Booster(object):
         return ctypes2buffer(cptr, length.value)
 
     def load_model(self, fname):
+        import sys ; print("load_model"); sys.stdout.flush()
         """
         Load the model from a file.
 
@@ -1090,6 +1101,7 @@ class Booster(object):
             _check_call(_LIB.XGBoosterLoadModelFromBuffer(self.handle, ptr, length))
 
     def dump_model(self, fout, fmap='', with_stats=False):
+        import sys ; print("dump_model"); sys.stdout.flush()
         """
         Dump model into a text file.
 
@@ -1115,6 +1127,7 @@ class Booster(object):
             fout.close()
 
     def get_dump(self, fmap='', with_stats=False, dump_format="text"):
+        import sys ; print("get_model"); sys.stdout.flush()
         """
         Returns the dump the model as a list of strings.
         """
@@ -1165,6 +1178,7 @@ class Booster(object):
         return self.get_score(fmap, importance_type='weight')
 
     def get_score(self, fmap='', importance_type='weight'):
+        import sys ; print("get_score"); sys.stdout.flush()
         """Get feature importance of each feature.
         Importance type can be defined as:
             'weight' - the number of times a feature is used to split the data across all trees.

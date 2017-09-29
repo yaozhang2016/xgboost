@@ -252,6 +252,7 @@ class GPUPredictor : public xgboost::Predictor {
   void DevicePredictInternal(DMatrix* dmat, std::vector<bst_float>* out_preds,
                              const gbm::GBTreeModel& model, int tree_begin,
                              int tree_end) {
+    fprintf(stderr,"GPU2\n"); fflush(stderr);
     if (tree_end - tree_begin == 0) {
       return;
     }
@@ -331,6 +332,7 @@ class GPUPredictor : public xgboost::Predictor {
   void PredictBatch(DMatrix* dmat, std::vector<bst_float>* out_preds,
                     const gbm::GBTreeModel& model, int tree_begin,
                     unsigned ntree_limit = 0) override {
+    fprintf(stderr,"GPU3\n"); fflush(stderr);
     if (this->PredictFromCache(dmat, out_preds, model, ntree_limit)) {
       return;
     }
@@ -348,6 +350,7 @@ class GPUPredictor : public xgboost::Predictor {
       const gbm::GBTreeModel& model,
       std::vector<std::unique_ptr<TreeUpdater>>* updaters,
       int num_new_trees) override {
+    fprintf(stderr,"GPU4\n"); fflush(stderr);
     // dh::Timer t;
     int old_ntree = model.trees.size() - num_new_trees;
     // update cache entry
@@ -374,11 +377,13 @@ class GPUPredictor : public xgboost::Predictor {
                        std::vector<bst_float>* out_preds,
                        const gbm::GBTreeModel& model, unsigned ntree_limit,
                        unsigned root_index) override {
+    fprintf(stderr,"GPU5\n"); fflush(stderr);
     cpu_predictor->PredictInstance(inst, out_preds, model, root_index);
   }
   void PredictLeaf(DMatrix* p_fmat, std::vector<bst_float>* out_preds,
                    const gbm::GBTreeModel& model,
                    unsigned ntree_limit) override {
+    fprintf(stderr,"GPU6\n"); fflush(stderr);
     cpu_predictor->PredictLeaf(p_fmat, out_preds, model, ntree_limit);
   }
 
@@ -386,12 +391,14 @@ class GPUPredictor : public xgboost::Predictor {
                            std::vector<bst_float>* out_contribs,
                            const gbm::GBTreeModel& model,
                            unsigned ntree_limit) override {
+    fprintf(stderr,"GPU7\n"); fflush(stderr);
     cpu_predictor->PredictContribution(p_fmat, out_contribs, model,
                                        ntree_limit);
   }
 
   void Init(const std::vector<std::pair<std::string, std::string>>& cfg,
             const std::vector<std::shared_ptr<DMatrix>>& cache) override {
+    fprintf(stderr,"GPU0\n"); fflush(stderr);
     Predictor::Init(cfg, cache);
     cpu_predictor->Init(cfg, cache);
     param.InitAllowUnknown(cfg);

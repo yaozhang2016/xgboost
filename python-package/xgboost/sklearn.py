@@ -307,6 +307,8 @@ class XGBModel(XGBModelBase):
     def predict(self, data, output_margin=False, ntree_limit=0):
         # pylint: disable=missing-docstring,invalid-name
         test_dmatrix = DMatrix(data, missing=self.missing, nthread=self.n_jobs)
+        params = self.get_xgb_params()
+        self._Booster = Booster(params)
         return self.get_booster().predict(test_dmatrix,
                                           output_margin=output_margin,
                                           ntree_limit=ntree_limit)
@@ -330,6 +332,8 @@ class XGBModel(XGBModelBase):
             ``[0; 2**(self.max_depth+1))``, possibly with gaps in the numbering.
         """
         test_dmatrix = DMatrix(X, missing=self.missing, nthread=self.n_jobs)
+        params = self.get_xgb_params()
+        self._Booster = Booster(params)
         return self.get_booster().predict(test_dmatrix,
                                           pred_leaf=True,
                                           ntree_limit=ntree_limit)
@@ -518,6 +522,8 @@ class XGBClassifier(XGBModel, XGBClassifierBase):
 
     def predict(self, data, output_margin=False, ntree_limit=0):
         test_dmatrix = DMatrix(data, missing=self.missing, nthread=self.n_jobs)
+        params = get_xgb_params()
+        self._Booster = Booster(params)
         class_probs = self.get_booster().predict(test_dmatrix,
                                                  output_margin=output_margin,
                                                  ntree_limit=ntree_limit)
@@ -530,6 +536,8 @@ class XGBClassifier(XGBModel, XGBClassifierBase):
 
     def predict_proba(self, data, output_margin=False, ntree_limit=0):
         test_dmatrix = DMatrix(data, missing=self.missing, nthread=self.n_jobs)
+        params = self.get_xgb_params()
+        self._Booster = Booster(params)
         class_probs = self.get_booster().predict(test_dmatrix,
                                                  output_margin=output_margin,
                                                  ntree_limit=ntree_limit)

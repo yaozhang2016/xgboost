@@ -12,6 +12,7 @@ void Predictor::Init(
     const std::vector<std::pair<std::string, std::string>>& cfg,
     const std::vector<std::shared_ptr<DMatrix>>& cache) {
   for (const std::shared_ptr<DMatrix>& d : cache) {
+    fprintf(stderr,"Predictor::Init\n"); fflush(stderr);
     PredictionCacheEntry e;
     e.data = d;
     cache_[d.get()] = std::move(e);
@@ -21,6 +22,7 @@ bool Predictor::PredictFromCache(DMatrix* dmat,
                                  std::vector<bst_float>* out_preds,
                                  const gbm::GBTreeModel& model,
                                  unsigned ntree_limit) {
+  fprintf(stderr,"Predictor::PredictFromCache\n"); fflush(stderr);
   if (ntree_limit == 0 ||
       ntree_limit * model.param.num_output_group >= model.trees.size()) {
     auto it = cache_.find(dmat);
@@ -40,6 +42,7 @@ bool Predictor::PredictFromCache(DMatrix* dmat,
 void Predictor::InitOutPredictions(const MetaInfo& info,
                                    std::vector<bst_float>* out_preds,
                                    const gbm::GBTreeModel& model) const {
+  fprintf(stderr,"Predictor::InitOutPredictions\n"); fflush(stderr);
   size_t n = model.param.num_output_group * info.num_row;
   const std::vector<bst_float>& base_margin = info.base_margin;
   out_preds->resize(n);
@@ -51,6 +54,7 @@ void Predictor::InitOutPredictions(const MetaInfo& info,
   }
 }
 Predictor* Predictor::Create(std::string name) {
+  fprintf(stderr,"Predictor::Create\n"); fflush(stderr);
   auto* e = ::dmlc::Registry<PredictorReg>::Get()->Find(name);
   if (e == nullptr) {
     LOG(FATAL) << "Unknown predictor type " << name;
