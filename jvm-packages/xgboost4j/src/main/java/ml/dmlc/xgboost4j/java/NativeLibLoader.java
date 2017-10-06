@@ -21,6 +21,9 @@ import java.lang.reflect.Field;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import static ml.dmlc.xgboost4j.java.NativeLibrary.CompilationFlags;
+import static ml.dmlc.xgboost4j.java.NativeLibrary.CompilationFlags.*;
+import static ml.dmlc.xgboost4j.java.NativeLibrary.EMPTY_COMPILATION_FLAGS;
 import static ml.dmlc.xgboost4j.java.NativeLibrary.nativeLibrary;
 import static ml.dmlc.xgboost4j.java.NativeLibraryLoaderChain.loaderChain;
 
@@ -46,8 +49,8 @@ public class NativeLibLoader {
       System.getProperty("sys.xgboost.jni.original", "false"));
 
   private static final NativeLibraryLoaderChain loader = loaderChain(
-      nativeLibrary("xgboost4j_gpu"),
-      nativeLibrary("xgboost4j")
+      nativeLibrary("xgboost4j_gpu", new CompilationFlags[] {WITH_GPU, WITH_OMP}),
+      nativeLibrary("xgboost4j", EMPTY_COMPILATION_FLAGS)
   );
 
   public static synchronized void initXGBoost() throws IOException {
@@ -87,6 +90,7 @@ public class NativeLibLoader {
    * @return  library suffix or {@link #MINIMAL_LIB_SUFFIX}
    * @throws IOException  if no library was found or library loading fails
    */
+  @Deprecated
   public static synchronized String getLoadedLibrarySuffix() throws IOException {
     String libName = getLoadedLibraryName();
     int lastIndex = -1;
@@ -94,6 +98,22 @@ public class NativeLibLoader {
       return libName.substring(lastIndex + 1);
     } else {
       return MINIMAL_LIB_SUFFIX;
+    }
+  }
+
+  /** Return compilation flags for loaded library or throws exception if no library was loaded
+   *
+   * @return  compilation flags of loaded XGBoost library
+   * @throws IOException  if no XGBoost library was found
+   */
+  public static synchronized CompilationFlags[] getLoadedLibraryCompilationFlags()
+      throws IOException {
+    initXGBoost();
+    NativeLibrary lib = null;
+    if ((lib = (NativeLibrary) loader.getSuccesfullyLoaded()) != null) {
+      return lib.getCompilationFlags();
+    } else {
+      throw new IOException("No binary library found!");
     }
   }
 

@@ -32,31 +32,42 @@ public class NativeLibrary implements Loadable {
 
   private static final Log logger = LogFactory.getLog(NativeLibrary.class);
 
+  public static CompilationFlags[] EMPTY_COMPILATION_FLAGS = new CompilationFlags[0];
+
+  /* Library compilation flags */
+  public enum CompilationFlags {
+    WITH_GPU, WITH_OMP
+  }
+
   private final String name;
   private final String version;
   private final ClassLoader classLoader;
   private final Platform platform;
+  private final CompilationFlags[] flags;
 
   // Is this library loaded already
   private boolean loaded = false;
 
-  public static Loadable nativeLibrary(String name) {
-    return new NativeLibrary(name);
+  public static Loadable nativeLibrary(String name, CompilationFlags[] flags) {
+    return new NativeLibrary(name, flags);
   }
 
-  public static Loadable nativeLibrary(String name, ClassLoader classLoader) {
-    return new NativeLibrary(name, null, classLoader);
+  public static Loadable nativeLibrary(String name, CompilationFlags[] flags,
+                                       ClassLoader classLoader) {
+    return new NativeLibrary(name, null, flags, classLoader);
   }
 
-  public NativeLibrary(String name) {
-    this(name, null, NativeLibrary.class.getClassLoader());
+  public NativeLibrary(String name, CompilationFlags[] flags) {
+    this(name, null, flags, NativeLibrary.class.getClassLoader());
   }
 
-  public NativeLibrary(String name, String version, ClassLoader classLoader) {
+  public NativeLibrary(String name, String version, CompilationFlags[] flags,
+                       ClassLoader classLoader) {
     this.name = name;
     this.version = version;
     this.classLoader = classLoader;
     this.platform = Platform.geOSType();
+    this.flags = flags;
   }
 
   @Override
@@ -165,6 +176,17 @@ public class NativeLibrary implements Loadable {
     }
 
     return temp;
+  }
+
+  public boolean hasComilationFlag(CompilationFlags flag) {
+    for (CompilationFlags f : flags) {
+      if (flag == f) return true;
+    }
+    return false;
+  }
+
+  public CompilationFlags[] getCompilationFlags() {
+    return flags;
   }
 
   @Override
