@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.2)
 project(xgboost)
 include(cmake/Utils.cmake)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
-find_package(OpenMP)
 
 set_default_configuration_release()
 msvc_use_static_runtime()
@@ -12,8 +11,14 @@ option(USE_CUDA  "Build with GPU acceleration")
 option(JVM_BINDINGS "Build JVM bindings" OFF)
 option(GOOGLE_TEST "Build google tests" OFF)
 option(R_LIB "Build shared library for R package" OFF)
+option(USE_OPENMP "Build with OMP support" ON)
 set(GPU_COMPUTE_VER 35;50;52;60;61 CACHE STRING
   "Space separated list of compute versions to be built against")
+
+# Use OpenMP
+if(USE_OPENMP)
+    find_package(OpenMP)
+endif()
 
 # Deprecation warning
 if(PLUGIN_UPDATER_GPU)
