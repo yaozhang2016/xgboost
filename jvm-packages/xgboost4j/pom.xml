@@ -69,6 +69,21 @@
                           <workingDirectory>${user.dir}</workingDirectory>
                       </configuration>
                   </execution>
+                  <execution>
+                      <id>extractLibs</id>
+                      <phase>package</phase>
+                      <goals>
+                          <goal>exec</goal>
+                      </goals>
+                      <configuration>
+                          <executable>./extract_jars.sh</executable>
+                          <arguments>
+                              <argument>xgboost4j/target/${project.build.finalName}.${project.packaging}</argument>
+                              <argument>${extractLibs.suffix}</argument>
+                          </arguments>
+                          <workingDirectory>${user.dir}</workingDirectory>
+                      </configuration>
+                  </execution>
               </executions>
           </plugin>
       </plugins>

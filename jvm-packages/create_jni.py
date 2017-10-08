@@ -74,32 +74,39 @@ if __name__ == "__main__":
         os.environ["JAVA_HOME"] = subprocess.check_output(
             "/usr/libexec/java_home").strip().decode()
 
-    print("building Java wrapper")
-    with cd(".."):
-        maybe_makedirs("build")
-        with cd("build"):
-            if sys.platform == "win32":
-                # Force x64 build on Windows.
-                maybe_generator = ' -G"Visual Studio 14 Win64"'
-            else:
-                maybe_generator = ""
-
-            args = ["-D{0}:BOOL={1}".format(k, v) for k, v in CONFIG.items()]
-            run("cmake .. " + " ".join(args) + maybe_generator)
-            run("cmake --build . --config Release")
-
-        with cd("demo/regression"):
-            run(sys.executable + " mapfeat.py")
-            run(sys.executable + " mknfold.py machine.txt 1")
-
-    print("copying native library")
+    # Select right library name
     library_name = {
         "win32": "xgboost4j.dll",
         "darwin": "libxgboost4j.dylib",
         "linux": "libxgboost4j.so"
     }[sys.platform]
+
+    library_path = "../lib/{}".format(library_name)
+
+    if not os.path.exists(library_path):
+        print("building Java wrapper")
+        with cd(".."):
+            maybe_makedirs("build")
+            with cd("build"):
+                if sys.platform == "win32":
+                    # Force x64 build on Windows.
+                    maybe_generator = ' -G"Visual Studio 14 Win64"'
+                else:
+                    maybe_generator = ""
+
+                args = ["-D{0}:BOOL={1}".format(k, v) for k, v in CONFIG.items()]
+                run("cmake .. " + " ".join(args) + maybe_generator)
+                run("cmake --build . --config Release")
+
+            with cd("demo/regression"):
+                run(sys.executable + " mapfeat.py")
+                run(sys.executable + " mknfold.py machine.txt 1")
+    else:
+        print("found existing library '{}' in '{}'".format(library_name, library_path))
+
+    print("copying native library")
     maybe_makedirs("xgboost4j/src/main/resources/lib")
-    cp("../lib/" + library_name, "xgboost4j/src/main/resources/lib")
+    cp(library_path, "xgboost4j/src/main/resources/lib")
 
     print("copying pure-Python tracker")
     cp("../dmlc-core/tracker/dmlc_tracker/tracker.py",

@@ -52,11 +52,11 @@ if [ $# -gt 1 ]; then
 
     cat <<EOF
 
-    ==========
-      Please see output in "$(pwd)/target" folder.
+==========
+  Please see output in "$(pwd)/target" folder.
 
-    $(find "${OUTDIR}" -type f)
-    ==========
+$(find "${OUTDIR}" -type f)
+==========
 
 EOF
 else
