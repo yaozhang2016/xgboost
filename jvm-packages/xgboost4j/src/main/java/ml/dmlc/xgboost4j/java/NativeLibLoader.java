@@ -42,15 +42,17 @@ public class NativeLibLoader {
   private static final String[] libNames = new String[]{"xgboost4j"};
 
   /** Default empty suffix for library which marks minimal binary lib. */
-  public static final String MINIMAL_LIB_SUFFIX = "";
+  public static final String MINIMAL_LIB_SUFFIX = "minimal";
 
   // Safe path in case we need to switch to original code path
   private static final boolean ORIGINAL_LOAD_PATH = Boolean.valueOf(
       System.getProperty("sys.xgboost.jni.original", "false"));
 
   private static final NativeLibraryLoaderChain loader = loaderChain(
+      // GPU support enabled
       nativeLibrary("xgboost4j_gpu", new CompilationFlags[] {WITH_GPU, WITH_OMP}),
-      nativeLibrary("xgboost4j", EMPTY_COMPILATION_FLAGS)
+      // Minimum version of library - no gpu, no omp
+      nativeLibrary("xgboost4j_minimal", EMPTY_COMPILATION_FLAGS)
   );
 
   public static synchronized void initXGBoost() throws IOException {
@@ -87,8 +89,9 @@ public class NativeLibLoader {
   /**
    * Returns suffix of library which marks binary version (gpu, omp)
    *
-   * @return  library suffix or {@link #MINIMAL_LIB_SUFFIX}
-   * @throws IOException  if no library was found or library loading fails
+   * @return  library suffix
+   * @throws IOException  if no library was found, or library loading fails, or suffix cannot
+   * be extracted
    */
   @Deprecated
   public static synchronized String getLoadedLibrarySuffix() throws IOException {
@@ -97,7 +100,7 @@ public class NativeLibLoader {
     if (libName != null && (lastIndex = libName.lastIndexOf('_')) >= 0) {
       return libName.substring(lastIndex + 1);
     } else {
-      return MINIMAL_LIB_SUFFIX;
+      throw new IOException("Inconsistency in library name detected! libName = " + libName);
     }
   }
 
