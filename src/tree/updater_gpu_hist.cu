@@ -377,6 +377,7 @@ class GPUHistMaker : public TreeUpdater {
       is_dense = info->num_nonzero == info->num_col * info->num_row;
       dh::Timer time0;
       hmat_.Init(&fmat, param.max_bin);
+      std::cout << "param.max_bin: " << param.max_bin << std::endl;
       cpu_init_time += time0.ElapsedSeconds();
       if (param.debug_verbose) {  // Only done once for each training session
         LOG(CONSOLE) << "[GPU Plug-in] CPU Time for hmat_.Init "
@@ -490,6 +491,9 @@ class GPUHistMaker : public TreeUpdater {
         bst_ulong num_elements_segment =
             device_element_segments[d_idx + 1] - device_element_segments[d_idx];
 
+
+        std::cout << "n_bins " << n_bins << std::endl;
+        exit(0);
         // ensure allocation doesn't overflow
         size_t hist_size = static_cast<size_t>(n_nodes(param.max_depth - 1))
          * static_cast<size_t>(n_bins);

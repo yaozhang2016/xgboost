@@ -99,6 +99,7 @@ void HistCutMatrix::Init(DMatrix* p_fmat, uint32_t max_num_bins) {
       bst_float last = cpt + fabs(cpt);
       cut.push_back(last);
     }
+    std::cout << "fid= " << fid << "cut size= " << cut.size() << std::endl;
     row_ptr.push_back(cut.size());
   }
 }
