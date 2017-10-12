@@ -295,6 +295,7 @@ class dvec {
 
  public:
   void external_allocate(int device_idx, void *ptr, size_t size) {
+    std::cout << "HERE1: " << size << std::endl;
     if (!empty()) {
       throw std::runtime_error("Tried to allocate dvec but already allocated");
     }
@@ -316,6 +317,7 @@ class dvec {
   std::vector<T> as_vector() const {
     std::vector<T> h_vector(size());
     safe_cuda(cudaSetDevice(_device_idx));
+    std::cout << "HERE2: " << size() << std::endl;
     safe_cuda(cudaMemcpy(h_vector.data(), _ptr, size() * sizeof(T),
                          cudaMemcpyDeviceToHost));
     return h_vector;
@@ -392,6 +394,7 @@ class dvec2 {
 
  public:
   void external_allocate(int device_idx, void *ptr1, void *ptr2, size_t size) {
+    std::cout << "HERE3: " << size << std::endl;
     if (!empty()) {
       throw std::runtime_error("Tried to allocate dvec2 but already allocated");
     }
@@ -426,28 +429,44 @@ class bulk_allocator {
   std::vector<size_t> _size;
   std::vector<int> _device_idx;
 
-  const int align = 256;
+  const size_t align = 256;
 
   template <typename SizeT>
   size_t align_round_up(SizeT n) {
-    n = (n + align - 1) / align;
-    return n * align;
+    std::cout << "SUPERGOD0: " << sizeof(SizeT) << std::endl;
+    std::cout << "SUPERGOD1: " << n << std::endl;
+    size_t nn = static_cast<size_t>(n);
+    std::cout << "SUPERGOD2: " << nn << std::endl;
+    nn = (nn + align - 1) / align;
+    std::cout << "SUPERGOD3: " << nn << std::endl;
+    size_t result = nn * align;
+    std::cout << "SUPERGOD4: " << result << std::endl;
+    return result;
   }
 
   template <typename T, typename SizeT>
   size_t get_size_bytes(dvec<T> *first_vec, SizeT first_size) {
-    return align_round_up<SizeT>(first_size * sizeof(T));
+    std::cout << "HEREGOD1a: " << first_size * sizeof(T) << std::endl;
+    size_t result = align_round_up<SizeT>(first_size * sizeof(T));
+    std::cout << "HEREGOD2b: " << result << std::endl;
+    return result;
   }
 
   template <typename T, typename SizeT, typename... Args>
   size_t get_size_bytes(dvec<T> *first_vec, SizeT first_size, Args... args) {
-    return get_size_bytes<T, SizeT>(first_vec, first_size) +
+    std::cout << "HEREGOD2c: " << first_size * sizeof(T) << std::endl;
+    std::cout << "HEREGODTa: " << sizeof(T) << std::endl;
+    std::cout << "HEREGODTb: " << sizeof(SizeT) << std::endl;
+    size_t result = get_size_bytes<T, SizeT>(first_vec, first_size) +
            get_size_bytes(args...);
+    std::cout << "HEREGOD2d: " << result << std::endl;
+    return result;
   }
 
   template <typename T, typename SizeT>
   void allocate_dvec(int device_idx, char *ptr, dvec<T> *first_vec,
                      SizeT first_size) {
+std::cout << "HERE4: " << first_size << std::endl;
     first_vec->external_allocate(device_idx, static_cast<void *>(ptr),
                                  first_size);
   }
@@ -455,6 +474,7 @@ class bulk_allocator {
   template <typename T, typename SizeT, typename... Args>
   void allocate_dvec(int device_idx, char *ptr, dvec<T> *first_vec,
                      SizeT first_size, Args... args) {
+std::cout << "HERE5: " << first_size << std::endl;
     first_vec->external_allocate(device_idx, static_cast<void *>(ptr),
                                  first_size);
     ptr += align_round_up(first_size * sizeof(T));
@@ -475,11 +495,13 @@ class bulk_allocator {
   }
   template <typename T, typename SizeT>
   size_t get_size_bytes(dvec2<T> *first_vec, SizeT first_size) {
+    std::cout << "HEREGOD3: " << first_size * sizeof(T) << std::endl;
     return 2 * align_round_up(first_size * sizeof(T));
   }
 
   template <typename T, typename SizeT, typename... Args>
   size_t get_size_bytes(dvec2<T> *first_vec, SizeT first_size, Args... args) {
+    std::cout << "HEREGOD4: " << first_size * sizeof(T) << std::endl;
     return get_size_bytes<T, SizeT>(first_vec, first_size) +
            get_size_bytes(args...);
   }
@@ -487,6 +509,7 @@ class bulk_allocator {
   template <typename T, typename SizeT>
   void allocate_dvec(int device_idx, char *ptr, dvec2<T> *first_vec,
                      SizeT first_size) {
+std::cout << "HERE6: " << first_size << std::endl;
     first_vec->external_allocate(
         device_idx, static_cast<void *>(ptr),
         static_cast<void *>(ptr + align_round_up(first_size * sizeof(T))),
@@ -496,6 +519,7 @@ class bulk_allocator {
   template <typename T, typename SizeT, typename... Args>
   void allocate_dvec(int device_idx, char *ptr, dvec2<T> *first_vec,
                      SizeT first_size, Args... args) {
+std::cout << "HERE7: " << first_size << std::endl;
     allocate_dvec<T, SizeT>(device_idx, ptr, first_vec, first_size);
     ptr += (align_round_up(first_size * sizeof(T)) * 2);
     allocate_dvec(device_idx, ptr, args...);
@@ -523,7 +547,9 @@ class bulk_allocator {
 
   template <typename... Args>
   void allocate(int device_idx, bool silent, Args... args) {
+    std::cout << "HERE8.1: " << std::endl;
     size_t size = get_size_bytes(args...);
+   std::cout << "HERE8.2: " << size << std::endl;
 
     char *ptr = allocate_device(device_idx, size, MemoryT);
 
@@ -533,7 +559,7 @@ class bulk_allocator {
     _size.push_back(size);
     _device_idx.push_back(device_idx);
 
-    if (!silent) {
+    if (true||!silent) {
       const int mb_size = 1048576;
       LOG(CONSOLE) << "Allocated " << size / mb_size << "MB on [" << device_idx
                    << "] " << device_name(device_idx) << ", "

@@ -493,9 +493,32 @@ class GPUHistMaker : public TreeUpdater {
             device_row_segments[d_idx + 1] - device_row_segments[d_idx];
         bst_ulong num_elements_segment =
             device_element_segments[d_idx + 1] - device_element_segments[d_idx];
+
+
+
+            std::cout << " " << n_nodes(param.max_depth - 1) * n_bins << " " <<
+            n_nodes(param.max_depth) << " " << max_num_nodes_device << " " <<
+            max_num_nodes_device << " " <<
+            n_nodes(param.max_depth) << " " <<
+            max_num_nodes_device << " " <<
+            n_features << " " <<
+            hmat_.min_val.size() << " " <<
+            h_feature_segments.size() << " " <<
+            num_rows_segment << " " <<
+            num_rows_segment << " " <<
+            num_rows_segment << " " <<
+            num_rows_segment << " " <<
+            common::CompressedBufferWriter::CalculateBufferSize(
+                num_elements_segment,
+                n_bins)  << " " <<
+            num_rows_segment + 1 << " " <<
+            n_bins << " " <<
+            hmat_.cut.size() << " " << std::endl;
+
+
         ba.allocate(
             device_idx, param.silent, &(hist_vec[d_idx].data),
-            n_nodes(param.max_depth - 1) * n_bins, &nodes[d_idx],
+            n_nodes(param.max_depth - 1) * static_cast<size_t>(n_bins), &nodes[d_idx],
             n_nodes(param.max_depth), &nodes_temp[d_idx], max_num_nodes_device,
             &nodes_child_temp[d_idx], max_num_nodes_device,
             &left_child_smallest[d_idx], n_nodes(param.max_depth),
