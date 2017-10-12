@@ -278,6 +278,8 @@ class GPUHistMaker : public TreeUpdater {
 
     CHECK(param.n_gpus != 0) << "Must have at least one device";
 
+    LOG(CONSOLE) << "GPU: Got inside GPUa: " << param.gpu_id;
+
 #if !USE_NCCL
     param.n_gpus = 1;
 #endif
@@ -304,12 +306,14 @@ class GPUHistMaker : public TreeUpdater {
   void InitData(const std::vector<bst_gpair>& gpair, DMatrix& fmat,  // NOLINT
                 const RegTree& tree) {
     dh::Timer time1;
+    LOG(CONSOLE) <<  "GPU: Got inside GPUb: " << param.gpu_id << std::endl;
     // set member num_rows and n_devices for rest of GPUHistBuilder members
     info = &fmat.info();
     num_rows = info->num_row;
     n_devices = dh::n_devices(param.n_gpus, num_rows);
 
     if (!initialised) {
+      LOG(CONSOLE) <<  "GPU: Got inside GPUc: " << param.gpu_id << std::endl;
       // reset static timers used across iterations
       cpu_init_time = 0;
       gpu_init_time = 0;

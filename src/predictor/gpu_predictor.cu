@@ -53,6 +53,7 @@ struct DeviceMatrix {
   thrust::device_vector<float> predictions;
 
   DeviceMatrix(DMatrix* dmat, int device_idx, bool silent) : p_mat(dmat) {
+    LOG(CONSOLE)  << "GPU: Inside gpu_predictor DeviceMatrix: GPU: " << device_idx;
     dh::safe_cuda(cudaSetDevice(device_idx));
     auto info = dmat->info();
     ba.allocate(device_idx, silent, &row_ptr, info.num_row + 1, &data,
@@ -251,6 +252,7 @@ class GPUPredictor : public xgboost::Predictor {
   void DevicePredictInternal(DMatrix* dmat, std::vector<bst_float>* out_preds,
                              const gbm::GBTreeModel& model, int tree_begin,
                              int tree_end) {
+    LOG(CONSOLE)  << "GPU: Inside gpu_predictor DevicePredictInternal GPU: " << param.gpu_id;
     if (tree_end - tree_begin == 0) {
       return;
     }

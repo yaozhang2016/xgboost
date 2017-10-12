@@ -464,6 +464,7 @@ class bulk_allocator {
   //    template <memory_type MemoryT>
   char *allocate_device(int device_idx, size_t bytes, memory_type t) {
     char *ptr;
+    LOG(CONSOLE) << "GPU Bulk allocate_device: " << bytes << " bytes.";
     if (t == memory_type::DEVICE) {
       safe_cuda(cudaSetDevice(device_idx));
       safe_cuda(cudaMalloc(&ptr, bytes));
@@ -501,9 +502,13 @@ class bulk_allocator {
   }
 
  public:
+  bulk_allocator() {
+    LOG(CONSOLE) << "GPU Bulk allocator constructor";
+  }
   ~bulk_allocator() {
     for (size_t i = 0; i < d_ptr.size(); i++) {
       if (!(d_ptr[i] == nullptr)) {
+        LOG(CONSOLE) << "GPU Bulk allocator deconstructor on GPU: " << _device_idx[i] << " for i=" << i;
         safe_cuda(cudaSetDevice(_device_idx[i]));
         safe_cuda(cudaFree(d_ptr[i]));
         d_ptr[i] = nullptr;

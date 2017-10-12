@@ -18,6 +18,7 @@ class CPUPredictor : public Predictor {
                              const std::vector<int>& tree_info, int bst_group,
                              unsigned root_index, RegTree::FVec* p_feats,
                              unsigned tree_begin, unsigned tree_end) {
+                             //LOG(CONSOLE) << "CPU Inside PredictValue";
     bst_float psum = 0.0f;
     p_feats->Fill(inst);
     for (size_t i = tree_begin; i < tree_end; ++i) {
@@ -111,6 +112,7 @@ class CPUPredictor : public Predictor {
   void PredictBatch(DMatrix* dmat, std::vector<bst_float>* out_preds,
                     const gbm::GBTreeModel& model, int tree_begin,
                     unsigned ntree_limit = 0) override {
+    LOG(CONSOLE) << "CPU Inside PredictBatch";
     if (this->PredictFromCache(dmat, out_preds, model, ntree_limit)) {
       return;
     }
@@ -154,6 +156,7 @@ class CPUPredictor : public Predictor {
                        std::vector<bst_float>* out_preds,
                        const gbm::GBTreeModel& model, unsigned ntree_limit,
                        unsigned root_index) override {
+                      LOG(CONSOLE) << "CPU Inside PredictInstance";
     if (thread_temp.size() == 0) {
       thread_temp.resize(1, RegTree::FVec());
       thread_temp[0].Init(model.param.num_feature);
@@ -174,6 +177,7 @@ class CPUPredictor : public Predictor {
   }
   void PredictLeaf(DMatrix* p_fmat, std::vector<bst_float>* out_preds,
                    const gbm::GBTreeModel& model, unsigned ntree_limit) override {
+                   LOG(CONSOLE) << "CPU Inside PredictLeaf";
     const int nthread = omp_get_max_threads();
     InitThreadTemp(nthread, model.param.num_feature);
     const MetaInfo& info = p_fmat->info();
